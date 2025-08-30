@@ -1,0 +1,118 @@
+// src/MarqueeGallery.jsx
+import React from "react";
+
+/**
+ * 무한 좌측 슬라이드 (초격리/최소 구현)
+ * - fs- 접두사로 전역 스타일과 절대 충돌 안 나게 구성
+ * - animation 속성에 !important로 방향/타이밍 고정
+ * - 마지막 간격 0으로 경계 덜컹 방지
+ * - border→outline (레이아웃 불변)
+ */
+export default function MarqueeGallery({
+  images = [],
+  height = 220,   // 숫자(px)
+  gap = 20,       // 숫자(px)
+  speed = 24,     // 초 (커질수록 느리게 = 더 매끈해 보임)
+  pauseOnHover = false,
+  twoRows = false,
+}) {
+  const Row = ({ reverse = false }) => (
+    <div
+      className="fs2-track"
+      {[...images, ...images].map((src, i) => {
+        const j = i % images.length;
+        return (
+          <div
+            key={i}
+            className="fs2-item"
+            style={{
+              width: height,
+              height,
+              marginRight: j === images.length - 1 ? 0 : gap,
+              contain: "layout paint size",
+            }}
+          >
+            <img
+              src={src}
+              alt={`work_${j}`}
+              className="fs2-img"
+              width={height}
+              height={height}
+              decoding="async"
+              loading={i < 2 ? "eager" : "lazy"}
+              fetchpriority={i === 0 ? "high" : "auto"}
+              draggable="false"
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <section className={pauseOnHover ? "fs2-wrap fs2-hover" : "fs2-wrap"}>
+      <div className="fs2-row" style={{ height }}>
+        <Row reverse={false} />
+      </div>
+      {twoRows && (
+        <div className="fs2-row" style={{ height, marginTop: gap }}>
+          <Row reverse={true} />
+        </div>
+      )}
+
+      <style>{`
+        .fs2-wrap{ position:relative; overflow:hidden; }
+        .fs2-row{ width:100%; overflow:hidden; }
+
+        /* 트랙: 200% 폭 + !important로 고정 */
+        .fs2-track{
+          width:200%;
+          display:flex;
+          align-items:center;
+          animation-timing-function: linear !important;
+          animation-direction: normal !important;
+          animation-iteration-count: infinite !important;
+          will-change: transform;
+          transform: translate3d(0,0,0);
+          backface-visibility: hidden;
+        }
+
+        /* hover 일시정지는 옵션으로만 */
+        .fs2-hover:hover .fs2-track{
+          animation-play-state: paused !important;
+        }
+
+        .fs2-item{
+          flex:0 0 auto;
+          display:block;
+          outline:1px solid rgba(255,255,255,.08);
+          border:0;
+          border-radius:12px;
+          background:#0e1325;
+          overflow:hidden;
+        }
+
+        .fs2-img{
+          width:100%;
+          height:100%;
+          display:block;
+          object-fit:contain;
+          transform: translateZ(0);
+          pointer-events:none;
+          user-select:none;
+        }
+
+        /* 절대 이름 안겹치게 */
+        @keyframes fs2Slide{
+          0%   { transform: translate3d(0,0,0); }
+          100% { transform: translate3d(-50%,0,0); }
+        }
+
+        @media (prefers-reduced-motion: reduce){
+          .fs2-track{ animation-duration: ${Math.max(speed*2, 40)}s !important; }
+        }
+      `}</style>
+    </section>
+  );
+}
+

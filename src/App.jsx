@@ -1,0 +1,896 @@
+import Portfolio from "./Portfolio";
+import Reveal from "./Reveal";
+import React, { useState, useEffect, useRef } from "react";
+import { defineProperties } from "./figma-react-shim";
+import { motion } from "motion/react";
+import VisualSection from "./VisualSection";
+import VideoBanner from "./VideoBanner";
+import CardCarousel from "./CardCarousel";
+import RevealUp from "./RevealUp";
+import MarqueeGallery from "./MarqueeGallery";
+
+
+// Mock data for the website
+const siteData = {
+  companyInfo: {
+    name: "주식회사풀시즌(FullSeason Co., Ltd.)",
+    ceo: "김순주",
+    address: "경남 양산 양주1길 11, 4층, 403호 (세종빌딩)",
+    phone: "1544-5627",
+    email: "fullseason11@naver.com",
+    bizRegNo: "185-87-03430"
+  },
+  carouselImages: [],
+  services: [
+    {
+      title: "Printing & Manufacturing",
+      description: "DTF / HTV Vinyl / Sublimation"
+    },
+    {
+      title: "Brand Operation",
+      description: "자체 브랜드 기획·운영(Coming Soon)\n드랍·프리오더 중심 운영"
+    },
+    {
+      title: "Creative Solutions",
+      description: "로고 · 웹사이트 · 상세페이지\nAI 기반 비주얼/콘텐츠 제작"
+    }
+  ],
+  printingMethods: [
+    {
+      title: "DTF (Direct to Film)",
+      imageUrl: "",
+      features: [
+        "다양한 원단에 적용 가능",
+        "선명한 색상과 디테일 표현",
+        "내구성이 뛰어나고 세탁에 강함",
+        "복잡한 디자인도 정확하게 구현"
+      ]
+    },
+    {
+      title: "HTV (Heat Transfer Vinyl)",
+      imageUrl: "",
+      features: [
+        "선명한 단색 디자인에 적합",
+        "특수 효과(글리터, 홀로그램 등) 구현 가능",
+        "내구성이 뛰어나고 오래 지속됨",
+        "다양한 원단에 적용 가능"
+      ]
+    },
+    {
+      title: "Sublimation",
+      imageUrl: "",
+      features: [
+        "폴리에스터 원단에 최적화",
+        "사진과 같은 풀 컬러 이미지 구현",
+        "영구적인 프린팅으로 색상 유지",
+        "원단과 일체화되어 촉감이 부드러움"
+      ]
+    }
+  ],
+  businessApproaches: [
+    {
+      title: "D2C (Direct to Consumer)",
+      steps: [
+        {
+          icon: "brand-development",
+          title: "브랜드 개발",
+          description: "아이덴티티, 컨셉, 마케팅 전략"
+        },
+        {
+          icon: "product-creation",
+          title: "제품 제작",
+          description: "디자인, 샘플링, 생산"
+        },
+        {
+          icon: "brand-operation",
+          title: "브랜드 운영",
+          description: "유통, 마케팅, 고객 관리"
+        }
+      ]
+    },
+    {
+      title: "B2C (Business to Consumer)",
+      steps: [
+        {
+          icon: "brand-development",
+          title: "브랜드 개발",
+          description: "디자인, 컨셉, 타겟 설정"
+        },
+        {
+          icon: "product-creation",
+          title: "제품 제작",
+          description: "프린팅, 생산, QC"
+        },
+        {
+          icon: "brand-making",
+          title: "브랜드 구축",
+          description: "로고, 패키징, 브랜드 경험"
+        }
+      ]
+    }
+  ]
+};
+
+// Placeholder images for carousel
+const placeholderImages = [];
+
+export default function FullSeasonWebsite({ 
+  cursorGlowSize = 350,
+  cursorGlowOpacity = 0.18,
+  cardTiltAmount = 8,
+  carouselAutoplaySpeed = 5
+}) {
+  // State for cursor glow effect
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isGlowActive, setIsGlowActive] = useState(false);
+  const [trails, setTrails] = useState([]);
+  
+  // State for carousel
+  const [slideIndex, setSlideIndex] = useState(0);
+  const totalSlides = siteData.carouselImages.length;
+  
+  // Refs for card tilt effect
+  const cardRefs = useRef([]);
+  
+  // Handle mouse movement for cursor glow
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setCursorPosition({ x: e.clientX, y: e.clientY });
+      setIsGlowActive(true);
+      
+      // Create trail effect when moving fast or dragging
+      const now = Date.now();
+      if (isDragging || (trails.length > 0 && now - trails[trails.length - 1].time < 50)) {
+        createTrail(e.clientX, e.clientY);
+      }
+    };
+    
+    const handleMouseLeave = () => {
+      setIsGlowActive(false);
+      setIsDragging(false);
+      setTrails([]);
+    };
+    
+    const handleMouseDown = (e) => {
+      setIsDragging(true);
+      createTrail(e.clientX, e.clientY);
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, trails]);
+  
+  // Clean up old trails
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setTrails(prevTrails => prevTrails.filter(trail => now - trail.time < 1000));
+    }, 200);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Autoplay carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSlideIndex(prevIndex => (prevIndex === totalSlides - 1 ? 0 : prevIndex + 1));
+    }, carouselAutoplaySpeed * 1000);
+    
+    return () => clearInterval(interval);
+  }, [totalSlides, carouselAutoplaySpeed]);
+  
+  // Create trail particles
+  const createTrail = (x, y) => {
+    const newTrail = {
+      id: Date.now(),
+      x,
+      y,
+      time: Date.now(),
+      opacity: 1
+    };
+    
+    setTrails(prevTrails => [...prevTrails, newTrail]);
+    
+    // Fade out trail
+    setTimeout(() => {
+      setTrails(prevTrails => 
+        prevTrails.map(trail => 
+          trail.id === newTrail.id ? { ...trail, opacity: 0 } : trail
+        )
+      );
+    }, 100);
+  };
+  
+  // Handle card tilt effect
+  const handleCardMouseMove = (e, index) => {
+    const card = cardRefs.current[index];
+    if (!card) return;
+    
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const px = (x / rect.width) - 0.5;
+    const py = (y / rect.height) - 0.5;
+    const rx = (+py * cardTiltAmount).toFixed(2);
+    const ry = (-px * cardTiltAmount).toFixed(2);
+    
+    card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(0)`;
+    card.style.setProperty('--cx', `${x}px`);
+    card.style.setProperty('--cy', `${y}px`);
+    card.style.setProperty('--gx', `${x}px`);
+    card.style.setProperty('--gy', `${y}px`);
+  };
+  
+  const handleCardMouseLeave = (index) => {
+    const card = cardRefs.current[index];
+    if (!card) return;
+    
+    card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) translateZ(0)';
+    card.style.removeProperty('--cx');
+    card.style.removeProperty('--cy');
+    card.style.removeProperty('--gx');
+    card.style.removeProperty('--gy');
+  };
+  
+  // Current year for footer
+  const currentYear = new Date().getFullYear();
+  
+  return (
+    <div className="relative w-full h-full font-sans text-[#e9ecf1] bg-[#0a0b11] overflow-x-hidden">
+      {/* Background Icons removed */}
+      <div className="fixed inset-0 w-full h-full pointer-events-none z-0"></div>
+
+      {/* Cursor Glow Effect */}
+      <motion.div 
+        className="fixed pointer-events-none z-10 rounded-full mix-blend-screen"
+        animate={{
+          left: cursorPosition.x,
+          top: cursorPosition.y,
+          width: isDragging ? cursorGlowSize * 1.3 : cursorGlowSize,
+          height: isDragging ? cursorGlowSize * 1.3 : cursorGlowSize,
+          opacity: isGlowActive ? (isDragging ? 1 : 0.8) : 0,
+          background: isDragging 
+            ? `radial-gradient(circle, rgba(106,73,255,${cursorGlowOpacity * 1.5}) 0%, rgba(42,127,255,${cursorGlowOpacity}) 40%, rgba(73,255,154,${cursorGlowOpacity * 0.8}) 70%, transparent 85%)`
+            : `radial-gradient(circle, rgba(106,73,255,${cursorGlowOpacity}) 0%, rgba(42,127,255,${cursorGlowOpacity * 0.7}) 40%, transparent 70%)`
+        }}
+        initial={{ opacity: 0 }}
+        style={{
+          x: "-50%",
+          y: "-50%"
+        }}
+        transition={{ duration: isDragging ? 0.2 : 0.3, ease: "easeOut" }}
+      />
+      
+      {/* Glow Trails */}
+      {trails.map(trail => (
+        <motion.div
+          key={trail.id}
+          className="fixed pointer-events-none z-10 rounded-full"
+          style={{
+            left: trail.x,
+            top: trail.y,
+            width: "25px",
+            height: "25px",
+            opacity: trail.opacity,
+            background: "radial-gradient(circle, rgba(106,73,255,0.7) 0%, transparent 70%)",
+            x: "-50%",
+            y: "-50%"
+          }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        />
+      ))}
+      
+      {/* Header */}
+      <header className="sticky top-0 z-20 backdrop-blur-md bg-gradient-to-b from-[rgba(10,11,17,0.95)] via-[rgba(10,11,17,0.7)] to-transparent">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="flex items-center justify-between py-5 border-b border-[#1b2131] px-[0px] py-[35px]">
+            <div className="text-2xl font-extrabold tracking-wide">FullSeason Co., Ltd.</div>
+            <nav className="flex gap-5 text-[#9aa4b2]">
+              <a href="#about" className="hover:opacity-100 opacity-90 text-base">회사소개</a>
+              <a href="#mission-vision" className="hover:opacity-100 opacity-90 text-base">미션·비전</a>
+              <a href="#services" className="hover:opacity-100 opacity-90 text-base">사업영역</a>
+              <a href="#business-approaches" className="hover:opacity-100 opacity-90 text-base">비즈니스&nbsp;접근법</a>
+              <a href="#tech" className="hover:opacity-100 opacity-90 text-base">프린팅&nbsp;제조방식</a>
+              <a href="#info" className="hover:opacity-100 opacity-90 text-base">회사정보</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+{/* 상단 영상 배너: 제목 위에 깔리는 은은한 영상 */}
+<VideoBanner
+  sources={["/video/hero1.mp4", "/video/hero2.mp4"]}
+  height="70vh"
+  dark={0.72}
+  switchEvery={12000}
+/>
+      {/* Hero Section */}
+      <section className="relative overflow-hidden min-h-[90vh] py-[150px] text-center bg-[radial-gradient(1200px_600px_at_0%_-10%,rgba(106,73,255,0.25),transparent_60%),radial-gradient(900px_600px_at_100%_-10%,rgba(42,127,255,0.22),transparent_60%),radial-gradient(800px_600px_at_50%_-20%,rgba(73,255,154,0.15),transparent_60%)] px-[0px]">
+        <div className="max-w-[1200px] mx-auto px-6 flex flex-col items-center justify-center gap-12">
+          <h1 className="text-[clamp(64px,8vw,120px)] leading-tight font-black tracking-wider inline-block relative animate-gradient bg-gradient-to-r from-[#6a49ff] via-[#2a7fff] to-[#49ff9a] bg-clip-text text-transparent bg-[length:200%_100%] pt-[50px] mt-[200px]">
+            Beyond Printing,<br/>Towards Branding
+          </h1>
+          <p className="text-2xl text-[#9aa4b2] max-w-[900px] mx-auto leading-relaxed">
+            주식회사 풀시즌은 프린팅 기술과 브랜드 운영을 아우르는 제조·운영사로,<br className="hidden md:block" /> 
+            아이디어를 실제 브랜드로 완성합니다.
+          </p>
+          <div className="flex flex-wrap justify-center mt-[100px] mb-[50px] gap-x-[100px] gap-y-4">
+            <span className="inline-block py-3 px-6 rounded-full bg-[#0e1325] border border-[#1b2131] text-base text-[#9aa4b2]">
+              Printing Support
+            </span>
+            <span className="inline-block py-3 px-6 rounded-full bg-[#0e1325] border border-[#1b2131] text-base text-[#9aa4b2]">
+              Brand House
+            </span>
+            <span className="inline-block py-3 px-6 rounded-full bg-[#0e1325] border border-[#1b2131] text-base text-[#9aa4b2]">
+              Creative Studio
+            </span>
+          </div>
+          <div className="pt-4">
+            <a 
+              href="#info" 
+              className="inline-block py-4 px-8 rounded-xl bg-gradient-to-r from-[#6a49ff] via-[#2a7fff] to-[#49ff9a] text-black font-extrabold text-xl hover:transform hover:-translate-y-1 hover:shadow-xl transition-all duration-200 mt-[150px]"
+            >
+              Contact Us
+            </a>
+          </div>
+        </div>
+      </section>
+      
+      {/* About Section */}
+<section id="about" className="py-32 border-t border-[#1b2131]">
+  <div className="max-w-[1200px] mx-auto px-6">
+    <div className="grid grid-cols-1 gap-8">
+      <div className="bg-[#121420] border border-[#1b2131] rounded-2xl p-7">
+        <RevealUp>
+          <h2 className="text-3xl font-extrabold mb-6">회사소개</h2>
+        </RevealUp>
+        <RevealUp delay={0.2}>
+          <p className="text-[#9aa4b2]">
+            주식회사 풀시즌(FullSeason)은 2024년 설립된 제조 기반 브랜드 운영사입니다.  
+            DTF, HTV Vinyl, Sublimation 등 프린팅 기술과 브랜드 운영 경험을 아우릅니다.
+          </p>
+        </RevealUp>
+      </div>
+    </div>
+  </div>
+</section>
+      
+      {/* Mission & Vision Section */}
+      <section id="mission-vision" className="py-32 border-t border-[#1b2131]">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <h2 className="text-3xl font-extrabold mb-10 text-center">미션 · 비전</h2>
+          
+          <div className="text-xl text-[#9aa4b2] text-center max-w-[800px] mx-auto mb-16 leading-relaxed italic">
+            <p>
+              "프린팅은 단순한 기술이 아닙니다. 브랜드의 감성과 만나는 순간, 그것은 하나의 콘텐츠가 되어 당신의 이야기를 전합니다. 우리는 제조에서 시작해, 브랜드로 성장하며, 콘텐츠로 문화를 남깁니다. 풀시즌의 이름처럼, 그 모든 과정을 완주해 나갑니다."
+            </p>
+          </div>
+          
+          <div 
+            ref={el => cardRefs.current[20] = el}
+            className="bg-[#121420] border border-[#1b2131] rounded-2xl p-10 relative overflow-hidden"
+            onMouseMove={(e) => handleCardMouseMove(e, 20)}
+            onMouseLeave={() => handleCardMouseLeave(20)}
+            style={{
+              transformStyle: "preserve-3d",
+              transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+              willChange: "transform"
+            }}
+          >
+            {/* Visual Journey */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4 relative">
+              <div className="absolute top-1/2 left-0 w-full h-2 -translate-y-1/2 hidden md:block">
+                <div className="h-full bg-gradient-to-r from-[#6a49ff] via-[#2a7fff] to-[#49ff9a] rounded-full"></div>
+                <div className="absolute top-1/2 left-1/3 w-4 h-4 bg-[#2a7fff] rounded-full -translate-x-1/2 -translate-y-1/2 border-2 border-[#121420]"></div>
+                <div className="absolute top-1/2 left-2/3 w-4 h-4 bg-[#2a7fff] rounded-full -translate-x-1/2 -translate-y-1/2 border-2 border-[#121420]"></div>
+              </div>
+              
+              {/* Stage 1 */}
+              <div className="flex-1 flex flex-col items-center text-center relative z-10">
+                <div className="w-24 h-24 rounded-full bg-[#0e1325] border-2 border-[#6a49ff] flex items-center justify-center mb-4">
+                  {/* 아이콘 */}
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.5 22H8.5C8.5 22 7 22 7 20.5V16H9V20H15V16H17V20.5C17 22 15.5 22 15.5 22Z" stroke="#6a49ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M10 6H14" stroke="#6a49ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M5 13H3C2.44772 13 2 12.5523 2 12V8C2 4.5 4.5 2 8 2H16C19.5 2 22 4.5 22 8V12C22 12.5523 21.5523 13 21 13H19M5 13V15C5 15.5523 5.44772 16 6 16H18C18.5523 16 19 15.5523 19 15V13M5 13V9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V13" stroke="#6a49ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">제조</h3>
+                <p className="text-[#9aa4b2]">프린팅 기술로 시작되는<br/>브랜드의 첫 단계</p>
+                <div className="h-16 w-1 bg-gradient-to-b from-[#6a49ff] to-[#2a7fff] mt-4 md:hidden"></div>
+              </div>
+              
+              {/* Stage 2 */}
+              <div className="flex-1 flex flex-col items-center text-center relative z-10">
+                <div className="w-24 h-24 rounded-full bg-[#0e1325] border-2 border-[#2a7fff] flex items-center justify-center mb-4">
+                  {/* 아이콘 */}
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L9 6.85714C9 5.83857 9.89543 5 11 5C12.1046 5 13 5.83857 13 6.85714L13 9.14286C13 10.1614 13.8954 11 15 11C16.1046 11 17 10.1614 17 9.14286L17 6.5" stroke="#2a7fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 12C6 15.3137 8.68629 18 12 18C15.3137 18 18 15.3137 18 12" stroke="#2a7fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 18V21" stroke="#2a7fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M7 21H17" stroke="#2a7fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">브랜드</h3>
+                <p className="text-[#9aa4b2]">기술과 감성이 만나<br/>스토리를 완성합니다</p>
+                <div className="h-16 w-1 bg-gradient-to-b from-[#2a7fff] to-[#49ff9a] mt-4 md:hidden"></div>
+              </div>
+              
+              {/* Stage 3 */}
+              <div className="flex-1 flex flex-col items-center text-center relative z-10">
+                <div className="w-24 h-24 rounded-full bg-[#0e1325] border-2 border-[#49ff9a] flex items-center justify-center mb-4">
+                  {/* 아이콘 */}
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#49ff9a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M17 9.75C17 8.784 16.1046 8 15 8H9C7.89543 8 7 8.784 7 9.75V10.25C7 11.216 7.89543 12 9 12H15C16.1046 12 17 12.784 17 13.75V14.25C17 15.216 16.1046 16 15 16H9C7.89543 16 7 15.216 7 14.25" stroke="#49ff9a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 22L12 8" stroke="#49ff9a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">콘텐츠 · 문화</h3>
+                <p className="text-[#9aa4b2]">브랜드가 성장하여<br/>문화를 형성합니다</p>
+              </div>
+            </div>
+            
+            {/* Journey Steps */}
+            <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-[#9aa4b2] p-4 bg-[#0f1425] rounded-xl border border-[#1b2131]">
+                <span className="inline-block text-[#6a49ff] font-bold mb-2">01</span>
+                <h4 className="text-white font-bold mb-2">기술에서 시작</h4>
+                <p>DTF, HTV, Sublimation 등 정밀한 프린팅 기술을 바탕으로 제품을 생산합니다. 기술적 완성도가 브랜드의 기초가 됩니다.</p>
+              </div>
+              <div className="text-[#9aa4b2] p-4 bg-[#0f1425] rounded-xl border border-[#1b2131]">
+                <span className="inline-block text-[#2a7fff] font-bold mb-2">02</span>
+                <h4 className="text-white font-bold mb-2">브랜드로 성장</h4>
+                <p>제품에 브랜드의 철학과 스토리를 담아내며 기술적 완성도를 넘어 감성적 가치를 더합니다. 이는 단순한 제품을 브랜드로 발전시킵니다.</p>
+              </div>
+              <div className="text-[#9aa4b2] p-4 bg-[#0f1425] rounded-xl border border-[#1b2131]">
+                <span className="inline-block text-[#49ff9a] font-bold mb-2">03</span>
+                <h4 className="text-white font-bold mb-2">문화로 확장</h4>
+                <p>브랜드가 전달하는 가치와 메시지는 콘텐츠가 되어 문화적 흐름을 만들어냅니다. 풀시즌은 이 모든 여정을 완주합니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+{/* Portfolio Section (사업영역 위) */}
+<Portfolio />
+
+<section id="services" className="py-24 border-t border-[#1b2131]">
+  <div className="max-w-[1200px] mx-auto px-6">
+    <h2 className="text-3xl font-extrabold mb-6">사업영역</h2>
+    <p className="text-xl text-[#9aa4b2] max-w-[900px] mb-8">
+      풀시즌은 단순한 제조를 넘어, 여러분의 아이디어를 현실로 만드는 브랜드 파트너입니다.
+      최첨단 프린팅 기술을 활용하여 창의적인 제품을 제작하고, 성공적인 시장 진출을 돕습니다.
+    </p>
+
+    {/* Services Grid (등장 애니메이션 + 기존 마우스 틸트 유지) */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+      {siteData.services.map((service, index) => (
+        <Reveal key={index} delay={index * 100}>
+          <div
+            ref={(el) => (cardRefs.current[index + 2] = el)}
+            className="bg-[#121420] border border-[#1b2131] rounded-2xl p-7 relative overflow-hidden"
+            onMouseMove={(e) => handleCardMouseMove(e, index + 2)}
+            onMouseLeave={() => handleCardMouseLeave(index + 2)}
+            style={{
+              transformStyle: "preserve-3d",
+              transition:
+                "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+              willChange: "transform",
+            }}
+          >
+            <div
+              className="absolute inset-[-1px] pointer-events-none opacity-0 transition-opacity duration-250 ease-in-out"
+              style={{
+                background:
+                  "radial-gradient(180px 180px at var(--cx,120%) var(--cy,120%), rgba(106,73,255,.35), transparent 60%)",
+              }}
+            />
+            <div
+              className="absolute inset-[-1px] pointer-events-none opacity-0 transition-opacity duration-250 ease-in-out mix-blend-screen"
+              style={{
+                background:
+                  "radial-gradient(250px 150px at var(--gx, -20%) var(--gy, -20%), rgba(255,255,255,.25), transparent 60%)",
+              }}
+            />
+            <h3 className="text-2xl font-bold mb-3">{service.title}</h3>
+            <div className="text-[#9aa4b2] whitespace-pre-line">
+              {service.description}
+            </div>
+          </div>
+        </Reveal>
+      ))}
+    </div>
+  </div>
+</section>
+
+      {/* ★ 비주얼 섹션 추가 (사업영역 바로 아래) ★ */}
+
+<VisualSection
+  images={[
+    "/visual/1.jpg",
+    "/visual/2.jpg",
+    "/visual/4.jpg",
+  ]}
+  interval={3000}
+  kenBurns={true}
+  pauseOnHover={false}
+  tintOnHover={true}
+caption="※ 본 홈페이지에 사용된 인물 이미지는 AI 기술로 생성되었으며, 실제 임직원과는 무관합니다."
+/>
+
+      {/* Business Approaches Section */}
+      <section id="business-approaches" className="py-24 border-t border-[#1b2131]">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <h2 className="text-3xl font-extrabold mb-6">비즈니스 접근법</h2>
+          <p className="text-xl text-[#9aa4b2] max-w-[900px] mb-12">
+            풀시즌은 세 가지 핵심 모델&nbsp;(D2C, B2C, B2B)&nbsp;을 통해 다양한 파트너와 소비자에게 서비스를 제공합니다.
+            각 모델별 강점을 활용하여 프로젝트 규모와 목적에 맞춤형 솔루션을 제공합니다.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+            {/* D2C */}
+            <div 
+              ref={el => cardRefs.current[10] = el}
+              className="bg-[#121420] border border-[#1b2131] rounded-2xl p-7 relative overflow-hidden"
+              onMouseMove={(e) => handleCardMouseMove(e, 10)}
+              onMouseLeave={() => handleCardMouseLeave(10)}
+              style={{
+                transformStyle: "preserve-3d",
+                transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+                willChange: "transform"
+              }}
+            >
+              <h3 className="text-2xl font-extrabold mb-8 text-center">{siteData.businessApproaches[0].title}</h3>
+              <div className="relative">
+                <div className="absolute left-[24px] top-[40px] h-[calc(100%-40px)] w-[2px] bg-gradient-to-b from-[#6a49ff] via-[#2a7fff] to-[#49ff9a]"></div>
+                {/* step 1 */}
+                <div className="flex items-start mb-12 relative">
+                  <div className="flex-shrink-0 w-[50px] h-[50px] rounded-full bg-[#121420] border-2 border-[#6a49ff] flex items-center justify-center z-10">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2L20 7V17L12 22L4 17V7L12 2Z" stroke="#6a49ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 8V16" stroke="#6a49ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M8 10L16 14" stroke="#6a49ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16 10L8 14" stroke="#6a49ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="ml-6">
+                    <h4 className="text-xl font-bold text-white">{siteData.businessApproaches[0].steps[0].title}</h4>
+                    <p className="text-[#9aa4b2] mt-2">{siteData.businessApproaches[0].steps[0].description}</p>
+                  </div>
+                </div>
+                {/* step 2 */}
+                <div className="flex items-start mb-12 relative">
+                  <div className="flex-shrink-0 w-[50px] h-[50px] rounded-full bg-[#121420] border-2 border-[#2a7fff] flex items-center justify-center z-10">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 16V7.2C21 6.0799 21 5.51984 20.782 5.09202C20.5903 4.71569 20.2843 4.40973 19.908 4.21799C19.4802 4 18.9201 4 17.8 4H6.2C5.07989 4 4.51984 4 4.09202 4.21799C3.71569 4.40973 3.40973 4.71569 3.21799 5.09202C3 5.51984 3 6.0799 3 7.2V16.8C3 17.9201 3 18.4802 3.21799 18.908C3.40973 19.2843 3.71569 19.5903 4.09202 19.782C4.51984 20 5.0799 20 6.2 20H17.8C18.9201 20 19.4802 20 19.908 19.782C20.2843 19.5903 20.5903 19.2843 20.782 18.908C21 18.4802 21 17.9201 21 16.8V16Z" stroke="#2a7fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M7 9L10 12L7 15" stroke="#2a7fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M11 15H17" stroke="#2a7fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="ml-6">
+                    <h4 className="text-xl font-bold text-white">{siteData.businessApproaches[0].steps[1].title}</h4>
+                    <p className="text-[#9aa4b2] mt-2">{siteData.businessApproaches[0].steps[1].description}</p>
+                  </div>
+                </div>
+                {/* step 3 */}
+                <div className="flex items-start relative">
+                  <div className="flex-shrink-0 w-[50px] h-[50px] rounded-full bg-[#121420] border-2 border-[#49ff9a] flex items-center justify-center z-10">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 14.5L12 19.5L17 14.5" stroke="#49ff9a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 19.5V4.5" stroke="#49ff9a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="ml-6">
+                    <h4 className="text-xl font-bold text-white">{siteData.businessApproaches[0].steps[2].title}</h4>
+                    <p className="text-[#9aa4b2] mt-2">{siteData.businessApproaches[0].steps[2].description}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* B2C */}
+            <div 
+              ref={el => cardRefs.current[11] = el}
+              className="bg-[#121420] border border-[#1b2131] rounded-2xl p-7 relative overflow-hidden"
+              onMouseMove={(e) => handleCardMouseMove(e, 11)}
+              onMouseLeave={() => handleCardMouseLeave(11)}
+              style={{
+                transformStyle: "preserve-3d",
+                transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+                willChange: "transform"
+              }}
+            >
+              <h3 className="text-2xl font-extrabold mb-8 text-center">{siteData.businessApproaches[1].title}</h3>
+              <div className="relative">
+                <div className="absolute left-[24px] top-[40px] h-[calc(100%-40px)] w-[2px] bg-gradient-to-b from-[#6a49ff] via-[#2a7fff] to-[#49ff9a]"></div>
+                {/* step 1 */}
+                <div className="flex items-start mb-12 relative">
+                  <div className="flex-shrink-0 w-[50px] h-[50px] rounded-full bg-[#121420] border-2 border-[#6a49ff] flex items-center justify-center z-10">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2 9C2 7.11438 2 6.17157 2.58579 5.58579C3.17157 5 4.11438 5 6 5H18C19.8856 5 20.8284 5 21.4142 5.58579C22 6.17157 22 7.11438 22 9V15C22 16.8856 22 17.8284 21.4142 18.4142C20.8284 19 19.8856 19 18 19H6C4.11438 19 3.17157 19 2.58579 18.4142C2 17.8284 2 16.8856 2 15V9Z" stroke="#6a49ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M8.5 12C8.5 13.3807 7.38071 14.5 6 14.5C4.61929 14.5 3.5 13.3807 3.5 12C3.5 10.6193 4.61929 9.5 6 9.5C7.38071 9.5 8.5 10.6193 8.5 12Z" stroke="#6a49ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M14.5 12C14.5 13.3807 13.3807 14.5 12 14.5C10.6193 14.5 9.5 13.3807 9.5 12C9.5 10.6193 10.6193 9.5 12 9.5C13.3807 9.5 14.5 10.6193 14.5 12Z" stroke="#6a49ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="ml-6">
+                    <h4 className="text-xl font-bold text-white">{siteData.businessApproaches[1].steps[0].title}</h4>
+                    <p className="text-[#9aa4b2] mt-2">{siteData.businessApproaches[1].steps[0].description}</p>
+                  </div>
+                </div>
+                {/* step 2 */}
+                <div className="flex items-start mb-12 relative">
+                  <div className="flex-shrink-0 w-[50px] h-[50px] rounded-full bg-[#121420] border-2 border-[#2a7fff] flex items-center justify-center z-10">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="4" y="4" width="16" height="16" rx="2" stroke="#2a7fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M4 9H20" stroke="#2a7fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9 20V9" stroke="#2a7fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="ml-6">
+                    <h4 className="text-xl font-bold text-white">{siteData.businessApproaches[1].steps[1].title}</h4>
+                    <p className="text-[#9aa4b2] mt-2">{siteData.businessApproaches[1].steps[1].description}</p>
+                  </div>
+                </div>
+                {/* step 3 */}
+                <div className="flex items-start relative">
+                  <div className="flex-shrink-0 w-[50px] h-[50px] rounded-full bg-[#121420] border-2 border-[#49ff9a] flex items-center justify-center z-10">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M15 21H9C7.89543 21 7 20.1046 7 19V5C7 3.89543 7.89543 3 9 3H15C16.1046 3 17 3.89543 17 5V19C17 20.1046 16.1046 21 15 21Z" stroke="#49ff9a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 18H12.01" stroke="#49ff9a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div className="ml-6">
+                    <h4 className="text-xl font-bold text-white">{siteData.businessApproaches[1].steps[2].title}</h4>
+                    <p className="text-[#9aa4b2] mt-2">{siteData.businessApproaches[1].steps[2].description}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Comparison */}
+          <div 
+            ref={el => cardRefs.current[12] = el}
+            className="bg-[#121420] border border-[#1b2131] rounded-2xl p-7 relative overflow-hidden"
+            onMouseMove={(e) => handleCardMouseMove(e, 12)}
+            onMouseLeave={() => handleCardMouseLeave(12)}
+            style={{
+              transformStyle: "preserve-3d",
+              transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+              willChange: "transform"
+            }}
+          >
+            <h3 className="text-2xl font-bold mb-6">두 접근법 비교</h3>
+            <div className="flex flex-col md:flex-row gap-8">
+              <div className="flex-1">
+                <h4 className="text-xl font-bold text-[#6a49ff] mb-4">브랜드 중심 접근법</h4>
+                <ul className="space-y-3 text-[#9aa4b2]">
+                  <li className="flex items-start"><span className="text-[#6a49ff] mr-2">•</span><span>브랜드 정체성과 가치를 먼저 구축</span></li>
+                  <li className="flex items-start"><span className="text-[#6a49ff] mr-2">•</span><span>장기적인 브랜드 운영 전략 중심</span></li>
+                  <li className="flex items-start"><span className="text-[#6a49ff] mr-2">•</span><span>제품은 브랜드 가치를 전달하는 수단</span></li>
+                  <li className="flex items-start"><span className="text-[#6a49ff] mr-2">•</span><span>고객 커뮤니티 및 관계 구축 중시</span></li>
+                </ul>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-xl font-bold text-[#49ff9a] mb-4">제작 중심 접근법</h4>
+                <ul className="space-y-3 text-[#9aa4b2]">
+                  <li className="flex items-start"><span className="text-[#49ff9a] mr-2">•</span><span>제품 품질과 기술적 완성도 우선</span></li>
+                  <li className="flex items-start"><span className="text-[#49ff9a] mr-2">•</span><span>제품 제작 과정에서 브랜드 특성 발굴</span></li>
+                  <li className="flex items-start"><span className="text-[#49ff9a] mr-2">•</span><span>기술력과 제작 경쟁력 기반 브랜드 구축</span></li>
+                  <li className="flex items-start"><span className="text-[#49ff9a] mr-2">•</span><span>제품 중심의 마케팅과 브랜드 스토리</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Tech Section */}
+<section id="tech" className="py-24 border-t border-[#1b2131]">
+  <div className="max-w-[1200px] mx-auto px-6">
+    <RevealUp>
+      <h2 className="text-3xl font-extrabold mb-6">프린팅 제조방식</h2>
+    </RevealUp>
+    <RevealUp delay={0.2}>
+      <p className="text-xl text-[#9aa4b2] max-w-[900px] mb-8">
+        풀시즌은 최고 품질의 제품을 위해 다양한 최신 프린팅 기술을 활용합니다.  
+        각 기술의 장점을 활용하여 고객의 요구에 맞는 최적의 솔루션을 제공합니다.
+      </p>
+    </RevealUp>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {siteData.printingMethods.map((method, index) => (
+        <RevealUp delay={0.3 + index * 0.1} key={index}>
+          <div className="bg-[#121420] border border-[#1b2131] rounded-2xl p-7">
+            <h3 className="text-2xl font-bold mb-3">{method.title}</h3>
+            <ul className="mt-4 pl-0 list-none text-[#9aa4b2]">
+              {method.features.map((feature, featureIndex) => (
+                <li key={featureIndex} className="relative pl-5">
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </RevealUp>
+      ))}
+    </div>
+  </div>
+</section>
+      
+      {/* Company Info Section */}
+      <section id="info" className="py-24 border-t border-[#1b2131]">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div 
+              ref={el => cardRefs.current[8] = el}
+              className="bg-[#121420] border border-[#1b2131] rounded-2xl p-7 relative overflow-hidden"
+              onMouseMove={(e) => handleCardMouseMove(e, 8)}
+              onMouseLeave={() => handleCardMouseLeave(8)}
+              style={{
+                transformStyle: "preserve-3d",
+                transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+                willChange: "transform"
+              }}
+            >
+              <h2 className="text-3xl font-extrabold mb-6">회사정보</h2>
+              <p className="text-[#9aa4b2]">회사명: {siteData.companyInfo.name}</p>
+              <p className="text-[#9aa4b2]">대표이사: {siteData.companyInfo.ceo}</p>
+              <p className="text-[#9aa4b2]">주소: {siteData.companyInfo.address}</p>
+              <p className="text-[#9aa4b2]">대표번호: {siteData.companyInfo.phone}</p>
+              <p className="text-[#9aa4b2]">이메일: {siteData.companyInfo.email}</p>
+              <p className="text-[#9aa4b2]">사업자등록번호: {siteData.companyInfo.bizRegNo}</p>
+              <hr className="h-px border-0 bg-gradient-to-r from-transparent via-[#6a49ff] to-transparent opacity-65 mt-12" />
+            </div>
+            
+            <div 
+              ref={el => cardRefs.current[9] = el}
+              className="bg-[#121420] border border-[#1b2131] rounded-2xl p-7 relative overflow-hidden"
+              onMouseMove={(e) => handleCardMouseMove(e, 9)}
+              onMouseLeave={() => handleCardMouseLeave(9)}
+              style={{
+                transformStyle: "preserve-3d",
+                transition: "transform .18s ease, box-shadow .18s ease, border-color .18s ease",
+                willChange: "transform"
+              }}
+            >
+              <h2 className="text-3xl font-extrabold mb-6">문의 및 안내</h2>
+              <p className="text-[#9aa4b2]">
+                본 홈페이지는 <strong>주식회사 풀시즌의 공식 홈페이지</strong>입니다.<br/>
+                소비자 상담·교환·반품은 <strong>각 브랜드 스토어 고객센터</strong>를 통해 진행됩니다.<br/><br/>
+                전화 상담은 현재 제공하지 않으며, 문의는 이메일 <strong>{siteData.companyInfo.email}</strong> 로 주시면 신속하게 답변드리겠습니다.<br/>
+                (운영시간: 평일 10:00 - 18:00, 주말 및 공휴일 휴무)
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* Footer */}
+      <footer className="py-16 border-t border-[#1b2131] text-center">
+        <div className="max-w-[1200px] mx-auto px-6 text-[#9aa4b2] text-base">
+          © {currentYear} FullSeason Co., Ltd. All rights reserved.
+        </div>
+      </footer>
+      
+      {/* Add CSS for animation */}
+      <style>{`
+        @keyframes gradient {
+          0% { background-position: 0% 0%; }
+          100% { background-position: 200% 0%; }
+        }
+        
+        .animate-gradient {
+          animation: gradient 4s linear infinite;
+        }
+        
+        .card:hover {
+          border-color: rgba(106,73,255,.45);
+          box-shadow: 0 15px 40px rgba(0,0,0,.45), 0 0 0 1px rgba(106,73,255,.18) inset;
+        }
+        
+        .card:hover > div:first-of-type {
+          opacity: 1;
+        }
+        
+        .card:hover > div:nth-of-type(2) {
+          opacity: 0.6;
+        }
+        
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-10px) translateX(5px); }
+          50% { transform: translateY(-5px) translateX(-5px); }
+          75% { transform: translateY(10px) translateX(3px); }
+        }
+        
+        @keyframes float-medium {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          33% { transform: translateY(-8px) translateX(7px); }
+          66% { transform: translateY(8px) translateX(-7px); }
+        }
+        
+        @keyframes float-fast {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          50% { transform: translateY(-12px) translateX(6px); }
+        }
+        
+        .animate-float-slow {
+          animation: float-slow 15s ease-in-out infinite;
+        }
+        
+        .animate-float-medium {
+          animation: float-medium 12s ease-in-out infinite;
+        }
+        
+        .animate-float-fast {
+          animation: float-fast 8s ease-in-out infinite;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// Image with fallback component
+function ImageWithFallback(props) {
+  const [didError, setDidError] = useState(false);
+  const { src, alt, style, className, ...rest } = props;
+
+  return didError ? (
+    <div
+      className={`inline-block bg-gray-100 text-center align-middle ${className ?? ''}`}
+      style={style}
+    >
+      <div className="flex items-center justify-center w-full h-full">
+        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIzLjciPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiByeD0iNiIvPjxwYXRoIGQ9Im0xNiA1OCAxNi0xOCAzMiAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg==" alt="Error loading image" {...rest} data-original-url={src} />
+      </div>
+    </div>
+  ) : (
+    <img src={src} alt={alt} className={className} style={style} {...rest} onError={() => setDidError(true)} />
+  );
+}
+
+defineProperties(FullSeasonWebsite, {
+  cursorGlowSize: {
+    label: "Cursor glow size",
+    type: "number",
+    defaultValue: 350
+  },
+  cursorGlowOpacity: {
+    label: "Cursor glow opacity",
+    type: "number",
+    control: "slider",
+    min: 0.05,
+    max: 0.5,
+    step: 0.01,
+    defaultValue: 0.18
+  },
+  cardTiltAmount: {
+    label: "Card tilt amount",
+    type: "number",
+    control: "slider",
+    min: 0,
+    max: 15,
+    step: 0.5,
+    defaultValue: 8
+  },
+  carouselAutoplaySpeed: {
+    label: "Carousel autoplay speed (seconds)",
+    type: "number",
+    defaultValue: 5
+  }
+});
