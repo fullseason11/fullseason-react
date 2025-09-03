@@ -294,51 +294,39 @@ export default function FullSeasonWebsite({
         />
       ))}
       
-      {/* Header */}
-      <header className="sticky top-0 z-20 backdrop-blur-md bg-gradient-to-b from-[rgba(10,11,17,0.95)] via-[rgba(10,11,17,0.7)] to-transparent">
-        <div className="max-w-[1200px] mx-auto px-6">
-          <div className="flex items-center justify-between py-5 border-b border-[#1b2131] px-[0px] py-[35px]">
-            <div className="text-2xl font-extrabold tracking-wide">FullSeason Co., Ltd.</div>
-           <nav
-        className="
-          flex flex-wrap gap-x-4 gap-y-2
-          text-[#9aa4b2] text-[15px] leading-tight md:text-base
-          break-keep
-        "
-      >
-        <a href="#about" className="hover:text-white whitespace-nowrap">
-          <span className="md:hidden">회사 소개</span>
-          <span className="hidden md:inline">회사소개</span>
-        </a>
+     {/* Header */}
+<header className="sticky top-0 z-20 backdrop-blur-md bg-gradient-to-b from-[rgba(10,11,17,0.95)] via-[rgba(10,11,17,0.7)] to-transparent">
+  <div className="max-w-[1200px] mx-auto px-6">
+    {/* 모바일: 세로, 데스크톱: 가로 */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-[#1b2131] py-4 md:py-6">
+      {/* 로고 */}
+      <div className="text-2xl font-extrabold tracking-wide mb-2 md:mb-0">
+        FullSeason Co., Ltd.
+      </div>
 
-        <a href="#mission-vision" className="hover:text-white whitespace-nowrap">
-          <span className="md:hidden">미션 비전</span>
-          <span className="hidden md:inline">미션·비전</span>
-        </a>
-
-        <a href="#services" className="hover:text-white whitespace-nowrap">
-          <span className="md:hidden">사업 영역</span>
-          <span className="hidden md:inline">사업영역</span>
-        </a>
-
-        <a href="#business-approaches" className="hover:text-white whitespace-nowrap">
-          <span className="md:hidden">비즈니스 접근법</span>
-          <span className="hidden md:inline">비즈니스&nbsp;접근법</span>
-        </a>
-
-        <a href="#tech" className="hover:text-white whitespace-nowrap">
-          <span className="md:hidden">프린팅 제조방식</span>
-          <span className="hidden md:inline">프린팅&nbsp;제조방식</span>
-        </a>
-
-        <a href="#info" className="hover:text-white whitespace-nowrap">
-          <span className="md:hidden">정보</span>
-          <span className="hidden md:inline">회사정보</span>
-        </a>
+      {/* ✅ 모바일 메뉴 : 3열 그리드 (md에서 숨김) */}
+      <nav className="md:hidden grid grid-cols-3 gap-x-4 gap-y-2 text-[#9aa4b2] text-[15px] leading-tight break-keep">
+        <a href="#about"             className="hover:text-white whitespace-nowrap">회사 소개</a>
+        <a href="#mission-vision"    className="hover:text-white whitespace-nowrap">미션 비전</a>
+        <a href="#services"          className="hover:text-white whitespace-nowrap">사업 영역</a>
+        <a href="#business-approaches" className="hover:text-white whitespace-nowrap">비즈니스 접근법</a>
+        <a href="#tech"              className="hover:text-white whitespace-nowrap">프린팅 제조방식</a>
+        <a href="#info"              className="hover:text-white whitespace-nowrap">정보</a>
       </nav>
-          </div>
-        </div>
-      </header>
+
+      {/* ✅ 데스크톱 메뉴 : 기존 가로 (모바일에서 숨김) */}
+      <nav className="hidden md:flex gap-6 text-[#9aa4b2] text-base">
+        <a href="#about"              className="hover:text-white whitespace-nowrap">회사소개</a>
+        <a href="#mission-vision"     className="hover:text-white whitespace-nowrap">미션·비전</a>
+        <a href="#services"           className="hover:text-white whitespace-nowrap">사업영역</a>
+        <a href="#business-approaches"className="hover:text-white whitespace-nowrap">비즈니스&nbsp;접근법</a>
+        <a href="#tech"               className="hover:text-white whitespace-nowrap">프린팅&nbsp;제조방식</a>
+        <a href="#info"               className="hover:text-white whitespace-nowrap">회사정보</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
       
 {/* 상단 영상 배너: 제목 위에 깔리는 은은한 영상 */}
 <VideoBanner
