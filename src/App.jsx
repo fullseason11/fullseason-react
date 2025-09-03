@@ -297,24 +297,25 @@ export default function FullSeasonWebsite({
      {/* Header */}
 <header className="sticky top-0 z-20 backdrop-blur-md bg-gradient-to-b from-[rgba(10,11,17,0.95)] via-[rgba(10,11,17,0.7)] to-transparent">
   <div className="max-w-[1200px] mx-auto px-6">
-    {/* 모바일: 세로, 데스크톱: 가로 */}
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-[#1b2131] py-4 md:py-6">
+    {/* 모바일: 세로+중앙, 데스크톱: 가로+좌우 */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-[#1b2131] py-4 md:py-6 
+                    items-center text-center"> 
       {/* 로고 */}
       <div className="text-2xl font-extrabold tracking-wide mb-2 md:mb-0">
         FullSeason Co., Ltd.
       </div>
 
-      {/* ✅ 모바일 메뉴 : 3열 그리드 (md에서 숨김) */}
-      <nav className="md:hidden grid grid-cols-3 gap-x-4 gap-y-2 text-[#9aa4b2] text-[15px] leading-tight break-keep">
+      {/* ✅ 모바일 메뉴 : 중앙 정렬 */}
+      <nav className="md:hidden grid grid-cols-3 gap-x-4 gap-y-2 text-[#9aa4b2] text-[15px] leading-tight break-keep justify-items-center">
         <a href="#about"             className="hover:text-white whitespace-nowrap">회사 소개</a>
         <a href="#mission-vision"    className="hover:text-white whitespace-nowrap">미션 비전</a>
         <a href="#services"          className="hover:text-white whitespace-nowrap">사업 영역</a>
         <a href="#business-approaches" className="hover:text-white whitespace-nowrap">비즈니스 접근법</a>
         <a href="#tech"              className="hover:text-white whitespace-nowrap">프린팅 제조방식</a>
-        <a href="#info"              className="hover:text-white whitespace-nowrap">회사 정보</a>
+        <a href="#info"              className="hover:text-white whitespace-nowrap">정보</a>
       </nav>
 
-      {/* ✅ 데스크톱 메뉴 : 기존 가로 (모바일에서 숨김) */}
+      {/* ✅ 데스크톱 메뉴 */}
       <nav className="hidden md:flex gap-6 text-[#9aa4b2] text-base">
         <a href="#about"              className="hover:text-white whitespace-nowrap">회사소개</a>
         <a href="#mission-vision"     className="hover:text-white whitespace-nowrap">미션·비전</a>
@@ -326,6 +327,7 @@ export default function FullSeasonWebsite({
     </div>
   </div>
 </header>
+
 
       
 {/* 상단 영상 배너: 제목 위에 깔리는 은은한 영상 */}
