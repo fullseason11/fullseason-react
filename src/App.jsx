@@ -299,14 +299,43 @@ export default function FullSeasonWebsite({
         <div className="max-w-[1200px] mx-auto px-6">
           <div className="flex items-center justify-between py-5 border-b border-[#1b2131] px-[0px] py-[35px]">
             <div className="text-2xl font-extrabold tracking-wide">FullSeason Co., Ltd.</div>
-            <nav className="flex gap-5 text-[#9aa4b2]">
-              <a href="#about" className="hover:opacity-100 opacity-90 text-base">회사소개</a>
-              <a href="#mission-vision" className="hover:opacity-100 opacity-90 text-base">미션·비전</a>
-              <a href="#services" className="hover:opacity-100 opacity-90 text-base">사업영역</a>
-              <a href="#business-approaches" className="hover:opacity-100 opacity-90 text-base">비즈니스&nbsp;접근법</a>
-              <a href="#tech" className="hover:opacity-100 opacity-90 text-base">프린팅&nbsp;제조방식</a>
-              <a href="#info" className="hover:opacity-100 opacity-90 text-base">회사정보</a>
-            </nav>
+           <nav
+        className="
+          flex flex-wrap gap-x-4 gap-y-2
+          text-[#9aa4b2] text-[15px] leading-tight md:text-base
+          break-keep
+        "
+      >
+        <a href="#about" className="hover:text-white whitespace-nowrap">
+          <span className="md:hidden">회사 소개</span>
+          <span className="hidden md:inline">회사소개</span>
+        </a>
+
+        <a href="#mission-vision" className="hover:text-white whitespace-nowrap">
+          <span className="md:hidden">미션 비전</span>
+          <span className="hidden md:inline">미션·비전</span>
+        </a>
+
+        <a href="#services" className="hover:text-white whitespace-nowrap">
+          <span className="md:hidden">사업 영역</span>
+          <span className="hidden md:inline">사업영역</span>
+        </a>
+
+        <a href="#business-approaches" className="hover:text-white whitespace-nowrap">
+          <span className="md:hidden">비즈니스 접근법</span>
+          <span className="hidden md:inline">비즈니스&nbsp;접근법</span>
+        </a>
+
+        <a href="#tech" className="hover:text-white whitespace-nowrap">
+          <span className="md:hidden">프린팅 제조방식</span>
+          <span className="hidden md:inline">프린팅&nbsp;제조방식</span>
+        </a>
+
+        <a href="#info" className="hover:text-white whitespace-nowrap">
+          <span className="md:hidden">정보</span>
+          <span className="hidden md:inline">회사정보</span>
+        </a>
+      </nav>
           </div>
         </div>
       </header>
