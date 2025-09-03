@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
 Sitemap: https://fullseason.co.kr/sitemap.xml
+
