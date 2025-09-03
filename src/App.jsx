@@ -311,7 +311,7 @@ export default function FullSeasonWebsite({
         <a href="#services"          className="hover:text-white whitespace-nowrap">사업 영역</a>
         <a href="#business-approaches" className="hover:text-white whitespace-nowrap">비즈니스 접근법</a>
         <a href="#tech"              className="hover:text-white whitespace-nowrap">프린팅 제조방식</a>
-        <a href="#info"              className="hover:text-white whitespace-nowrap">정보</a>
+        <a href="#info"              className="hover:text-white whitespace-nowrap">회사 정보</a>
       </nav>
 
       {/* ✅ 데스크톱 메뉴 : 기존 가로 (모바일에서 숨김) */}
