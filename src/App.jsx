@@ -310,6 +310,7 @@ export default function FullSeasonWebsite({
           </div>
         </div>
       </header>
+      
 {/* 상단 영상 배너: 제목 위에 깔리는 은은한 영상 */}
 <VideoBanner
   sources={["/video/hero1.mp4", "/video/hero2.mp4"]}
